@@ -3,6 +3,10 @@
   <settings defaultResolver="chain1" />
   <resolvers>
     <chain name="chain1">
+      <filesystem name="local">
+            <artifact pattern="/home/jeff/.ivy2/local/[organisation]/[module]/[revision]/[type]s/[artifact].[ext]" />
+      </filesystem>
+
       <filesystem name="libraries">
 	    <artifact pattern="${ivy.settings.dir}/repo/[organisation]/[module]/[revision]/[type]s/[artifact]-[revision].[ext]" />
       </filesystem>

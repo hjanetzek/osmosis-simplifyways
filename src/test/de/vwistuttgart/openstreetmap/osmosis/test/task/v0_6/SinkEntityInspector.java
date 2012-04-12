@@ -4,6 +4,8 @@ package de.vwistuttgart.openstreetmap.osmosis.test.task.v0_6;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 
@@ -76,6 +78,13 @@ public class SinkEntityInspector implements Sink {
 	 */
 	public Iterable<EntityContainer> getProcessedEntities() {
 		return Collections.unmodifiableList(processedEntities);
+	}
+
+
+	@Override
+	public void initialize(Map<String, Object> metaData) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

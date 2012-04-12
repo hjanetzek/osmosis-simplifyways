@@ -1,7 +1,9 @@
 package de.vwistuttgart.openstreetmap.osmosis.simplifyways.v0_6;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.openstreetmap.osmosis.core.container.v0_6.BoundContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
@@ -10,6 +12,7 @@ import org.openstreetmap.osmosis.core.container.v0_6.NodeContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.RelationContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.WayContainer;
 import org.openstreetmap.osmosis.core.domain.v0_6.Node;
+import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
 import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 import org.openstreetmap.osmosis.core.store.IndexedObjectStore;
 import org.openstreetmap.osmosis.core.store.IndexedObjectStoreReader;
@@ -26,8 +29,8 @@ import de.vwistuttgart.openstreetmap.osmosis.simplifyways.v0_6.impl.NodeInfo;
  * 
  * The current implementation does not cache the data in an intermediate store.
  * 
- * Required stream order: nodes, then ways.
- * Output stream order: ways, then nodes.
+ * Required stream order: nodes, then ways. Output stream order: ways, then
+ * nodes.
  * 
  * 
  * @author Igor Podolskiy
@@ -49,8 +52,8 @@ public class WaySimplifier implements SinkSource, EntityProcessor {
 	 */
 	public WaySimplifier(double epsilonMeters) {
 		nodeStore = new IndexedObjectStore<NodeInfo>(
-				new SingleClassObjectSerializationFactory(NodeInfo.class),
-				"wsn");
+		new SingleClassObjectSerializationFactory(NodeInfo.class),
+		"wsn");
 
 		double epsilonDegrees = epsilonMeters * 180 / (SPHEROID_RADIUS * Math.PI);
 		simplifier = new DouglasPeuckerSimplifier(epsilonDegrees);
@@ -98,25 +101,40 @@ public class WaySimplifier implements SinkSource, EntityProcessor {
 			nodeStore.complete();
 			nodeStoreReader = nodeStore.createReader();
 		}
-
-		List<WayNode> wayNodes = wayContainer.getEntity().getWayNodes();
-		List<NodeInfo> realWayNodes = new ArrayList<NodeInfo>(wayNodes.size());
-		for (WayNode wayNode : wayNodes) {
-			realWayNodes.add(nodeStoreReader.get(wayNode.getNodeId()));
-		}
 		
-		simplifier.simplify(realWayNodes);
-		wayContainer.getEntity().getWayNodes().clear();
-		for (NodeInfo nodeInfo : realWayNodes) {
-			wayContainer.getEntity().getWayNodes().add(new WayNode(nodeInfo.getId()));
+		boolean found = false;
+		Collection<Tag> tags = wayContainer.getEntity().getTags();
+		for (Tag tag : tags) {
+			if ("highway".equals(tag.getKey())) {
+				found = true;
+			}
 		}
 
+		if (found) {
+			List<WayNode> wayNodes = wayContainer.getEntity().getWayNodes();
+			List<NodeInfo> realWayNodes = new ArrayList<NodeInfo>(wayNodes.size());
+			for (WayNode wayNode : wayNodes) {
+				realWayNodes.add(nodeStoreReader.get(wayNode.getNodeId()));
+			}
+
+			simplifier.simplify(realWayNodes);
+			wayContainer.getEntity().getWayNodes().clear();
+			for (NodeInfo nodeInfo : realWayNodes) {
+				wayContainer.getEntity().getWayNodes().add(new WayNode(nodeInfo.getId()));
+			}
+		}
 		sink.process(wayContainer);
 	}
 
 	@Override
 	public void process(RelationContainer relationContainer) {
 		sink.process(relationContainer);
+	}
+
+	@Override
+	public void initialize(Map<String, Object> metaData) {
+		// TODO Auto-generated method stub
+
 	}
 
 }

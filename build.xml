@@ -149,9 +149,9 @@
 		<jar destfile="${dist.dir}/${ant.project.name}-${project.version}.jar">
 			<fileset dir="${build.dir}/main">
 			</fileset>
+		<zipgroupfileset dir="${lib.dir}/dist" includes="*.jar"/>
 		</jar>
 	</target>
-	
 	<target name="dist" depends="jar" description="--> create a distribution">
 		<copy todir="${dist.dir}">
 			<fileset dir="${lib.dir}/dist">
